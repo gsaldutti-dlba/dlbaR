@@ -1,10 +1,10 @@
-library(httr)
-library(dplyr)
+
 
 #
 #not set up to return geoms yet
 get_parcels_faster <- function(returnGeom=F, fields=c()) {
-
+  library(httr)
+  library(dplyr)
 
   fields_string <- paste0(fields, collapse=",")
 
