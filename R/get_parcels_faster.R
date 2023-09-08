@@ -29,7 +29,7 @@ get_parcels_faster <- function(returnGeom=F, fields=c()) {
     query <- POST(url, encode="form",                      # this will set the header for you
             #body=list(file=upload_file("example.txt")),   # this is how to upload files
             body=list(
-              objectIds=paste0(unlist(splits[[1]]),collapse=','),
+              objectIds=paste0(unlist(x),collapse=','),
               returnGeometry=returnGeom,
               outFields=fields_string,
               f='pjson',
