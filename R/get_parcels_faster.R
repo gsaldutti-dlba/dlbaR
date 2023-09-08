@@ -18,30 +18,30 @@ get_parcels_faster <- function(returnGeom=F, fields=c()) {
                returnIdsOnly='true',
                f='pjson'
              )) %>%
-    content()
+    httr::content()
 
   ids <- ids[[2]]
 
   splits <- split(ids, ceiling(seq_along(ids)/2000))
 
 
-
   a <- lapply(splits,function(x){
-    response <- POST(url, encode="form",                      # this will set the header for you
+    query <- POST(url, encode="form",                      # this will set the header for you
             #body=list(file=upload_file("example.txt")),   # this is how to upload files
             body=list(
-              objectIds=paste0(unlist(x),collapse=','),
+              objectIds=paste0(unlist(splits[[1]]),collapse=','),
               returnGeometry=returnGeom,
               outFields=fields_string,
               f='pjson',
               returnExceededLimitFeatures="true"
-              ))  %>%
-    content()%>%
+              ))
+    response <- query %>%
+      httr::content()%>%
     .$features %>%
       unlist(recursive=F)
 
     names(response) <- NULL
-    response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=fields)
+    response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=all_of(fields))
     }
 
   )
