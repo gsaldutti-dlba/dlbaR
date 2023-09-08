@@ -3,7 +3,7 @@ library(dplyr)
 
 #
 #not set up to return geoms yet
-query_parcels_faster <- function(returnGeom=F, fields=c()) {
+get_parcels_faster <- function(returnGeom=F, fields=c()) {
 
 
   fields_string <- paste0(fields, collapse=",")
