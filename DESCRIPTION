@@ -11,3 +11,4 @@ Encoding: UTF-8
 LazyData: true
 Imports: tidyr, dplyr
 Depends: httr
+RoxygenNote: 7.2.1
