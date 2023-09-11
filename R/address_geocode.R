@@ -1,6 +1,6 @@
 # Hello, world!
 
-geocode <- function (df, address_column, crs = 4326) {
+address_geocode <- function (df, address_column, crs = 4326) {
 
   address <- enquo(address_column)
 
