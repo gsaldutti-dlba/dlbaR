@@ -1,124 +1,97 @@
 # Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Install Package:           'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
 
-address_geocode <- function(addresses) {
-  #column_vector: data frame column as vector with addresses
-  #set base url
-  base_url <- 'https://opengis.detroitmi.gov/opengis/rest/services/BaseUnits/BaseUnitGeocoderDev/GeocodeServer/geocodeAddresses/query?f=json'
+geocode <- function (df, address_column, crs = 4326) {
 
-  #set response variables
-  format_out <- 'json'
-  outSR <-'4326'
-  outFields <-'*'
+  address <- enquo(address_column)
 
-  #addresses <- data.frame(addresses)
-  addresses <- as.list(add$address[1:3])
-  #name lists
-  names <- rep('SingleLine', length(addresses))
-  names(addresses) <- names
+  df$OBJECTID <- 1:nrow(df)
+
+  adr_df <- dplyr::select(df, OBJECTID, !!address)
+  names(adr_df) <- c("OBJECTID", "SingleLine")
 
 
-  #create objectid list
-  objectID <-1:length(addresses)
-  ids <- rep('OBJECTID', length(objectID))
-  names(objectID) <- ids
-  #
-  #address_df <- cbind(addresses,objectID)
+  if (nrow(df>1000)) {
 
-  #names(address_df) <- c('SingleLine','OBJECTID'
+    df_list <- split(adr_df, ceiling(seq(nrow(adr_df))/1000))
 
-  address_list <- list()
-  for(i in 1:length(addresses)) {
-    new_add <-c(addresses[[i]], objectID[[i]])
-    new_add <- as.list(new_add)
-    names(new_add) <- c('SingleLine','OBJECTID')
-    add_list <- list(attributes=new_add)
-    address_list<-rlist::list.append(address_list, add_list)
+    adr_json <- lapply(df_list, function(x){
+
+
+      tmp_list <- apply(x, 1, function(i) list(attributes = as.list(i)))
+
+      tmp_list <- unname(tmp_list)
+
+      tmp_list <- lapply(tmp_list, function(i) {
+        i$attributes$OBJECTID <- as.numeric(i$attributes$OBJECTID)
+        i
+      })
+      adr_json <- jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
+
+      adr_json <-
+        jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
+
+
+      return(adr_json)
+    }
+
+
+
+      )
+
+
+    results <-lapply(adr_json, function(x) {
+      response <- httr::POST(url = "https://opengis.detroitmi.gov/opengis/rest/services/Geocoders/CompositeGeocoder/GeocodeServer/geocodeAddresses",
+                             body = list(addresses = x, f = "json", outSR = crs))
+
+      response <- jsonlite::fromJSON(httr::content(response,
+                                                   "text"), flatten = TRUE)
+
+      results <- response[["locations"]]
+      results[is.na(results)] <- NA
+
+      return(results)
+
+    })
+
+    results <- do.call(rbind, results)
+
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id")]
+
+
+
+
+
+
+
+
   }
-  address_json <- jsonlite::toJSON(address_list,auto_unbox=TRUE)
+  else {
 
-  #create list for formatting
-  jsonlist <- list(
-    records = address_list
-  )
+    tmp_list <- apply(adr_df, 1, function(i) list(attributes = as.list(i)))
 
-  #format to json
-  return_json <- jsonlite::toJSON(jsonlist, auto_unbox = TRUE)
+    tmp_list <- unname(tmp_list)
 
-  url_bytes=""
-  url_bytes$query <- list(addresses=return_json,f='json',outFields='parcel_id')
-  url_bytes <-gsub("?","",url_build(url_bytes))
+    tmp_list <- lapply(tmp_list, function(i) {
+      i$attributes$OBJECTID <- as.numeric(i$attributes$OBJECTID)
+      i
+    })
+    adr_json <- jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
 
-  t<-httr::POST(base_url, body = return_json)
-
-  httr::content(t)
-
-  req <- request(base_url) %>%
-    req_url_query(outFields="parcel_id",addresses=return_json,f='json') %>%
-    req_headers(`Content-Length`=url_length) %>%
-    req_method("POST") %>%
-    req_perform()
-
-  resp_body_json(req)
+    adr_json <-
+      jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
 
 
+    message("njgeo: downloading data")
+    response <- httr::POST(url = "https://opengis.detroitmi.gov/opengis/rest/services/Geocoders/CompositeGeocoder/GeocodeServer/geocodeAddresses",
+                           body = list(addresses = adr_json, f = "json", outSR = crs))
+    response <- jsonlite::fromJSON(httr::content(response,
+                                                 "text"), flatten = TRUE)
+    results <- response[["locations"]]
+    results[is.na(results)] <- NA
 
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id")]
 
-  f <- httr2::request(base_url) %>%
-    req_url_query(f='json',
-                  addresses=return_json)
-  c_length <- nchar(f$url)
-
-
-  g <- httr2::request(base_url) %>%
-    req_method('POST') %>%
-    req_url_query(f='json',
-                  addresses=return_json) %>%
-    req_headers(`Content-Length`=as.character(c_length),
-                `Content-Type`=
-                'application/x-www-form-urlencoded') %>%
-    #req_dry_run()
-    #req_body_json(return_json) %>%
-    req_perform() #%>%
-    resp_body_json()
-
-  g <- httr2::GET()
-  #
-  # query=list(
-  #   f=format_out,
-  #   outSR=outSR,
-  #   outFields=outFields,
-  #   addresses=return_json
-  # ),
-  # # encode='json')
-  # httr::add_headers(
-  #   "Accept"="*/*",
-  #   "Accept-Encoding"=
-  #     "gzip, deflate, br",
-  #   'Content-Type'='application/json'))
-
-  response <- content(g)$locations
-
-  results <- lapply(response, function(x){
-    add <- x$attributes$ShortLabel
-    match <- x$attributes$Score
-    parcel_id <- x$attributes$parcel_id
-    vec <- c(add,match,parcel_id)
+    return(results)
   }
-  )
-  return(do.call(rbind,results))
-
-
+  return(results)
 }
