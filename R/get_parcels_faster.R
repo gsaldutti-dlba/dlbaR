@@ -2,7 +2,7 @@
 
 #
 #not set up to return geoms yet
-get_parcels_faster <- function(returnGeom=F, fields=c()) {
+get_parcels_faster <- function(returnGeom=F, fields=c('object_id', 'parcel_number')) {
   library(httr)
   library(dplyr)
 
@@ -17,38 +17,77 @@ get_parcels_faster <- function(returnGeom=F, fields=c()) {
   ids <- GET(url,
              query=list(
                where='1=1',
-               returnIdsOnly='true',
+               #returnIdsOnly='true',
+               returnCountOnly='true',
                f='pjson'
              )) %>%
     httr::content()
 
-  ids <- ids[[2]]
 
-  splits <- split(ids, ceiling(seq_along(ids)/2000))
-
-
-  a <- lapply(splits,function(x){
+  return <- list()
+  j <- 0
+  for(i in 1:round(ids$count/2000+1)) {
+    print(i, j)
     query <- POST(url, encode="form",                      # this will set the header for you
-            #body=list(file=upload_file("example.txt")),   # this is how to upload files
-            body=list(
-              objectIds=paste0(unlist(x),collapse=','),
-              returnGeometry=returnGeom,
-              outFields=fields_string,
-              f='pjson',
-              returnExceededLimitFeatures="true"
-              ))
-    response <- query %>%
-      httr::content()%>%
-    .$features %>%
-      unlist(recursive=F)
+                            #body=list(file=upload_file("example.txt")),   # this is how to upload files
+                            body=list(
+                              #objectIds=paste0(unlist(x),collapse=','),
+                              resultOffset=j,
+                              where='1=1',
+                              returnGeometry=returnGeom,
+                              outFields=fields_string,
+                              f='pjson'
+                              ))
+      response <- query %>%
+        httr::content()%>%
+        .$features %>%
+        unlist(recursive=F)
 
-    names(response) <- NULL
-    response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=all_of(fields))
-    }
+        names(response) <- NULL
 
-  )
+        response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=all_of(fields))
 
-  a <- do.call(rbind, a)
+      return[[i]] <- response
+
+
+      j <- j+2000
+
+  }
+
+  return <- do.call(rbind, return)
+
+  return(return)
+
+  #splits <- split(ids, ceiling(seq_along(ids)/2000))
+
+
+  # a <- lapply(splits,function(x){
+  #   query <- POST(url, encode="form",                      # this will set the header for you
+  #           #body=list(file=upload_file("example.txt")),   # this is how to upload files
+  #           body=list(
+  #             objectIds=paste0(unlist(x),collapse=','),
+  #             returnGeometry=returnGeom,
+  #             outFields=fields_string,
+  #             f='pjson',
+  #             returnExceededLimitFeatures="true"
+  #             ))
+  #   response <- query %>%
+  #     httr::content()%>%
+  #   .$features %>%
+  #     unlist(recursive=F)
+  #
+  #   names(response) <- NULL
+  #   response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=all_of(fields))
+  #   }
+  #
+  # )
+
+
+
+
+
+
+  #a <- do.call(rbind, a)
 
 }
 
