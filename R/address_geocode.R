@@ -1,6 +1,6 @@
 # Hello, world!
 
-geocode <- function (df, address_column, crs = 4326) {
+address_geocode <- function (df, address_column, crs = 4326) {
 
   address <- enquo(address_column)
 
@@ -81,7 +81,7 @@ geocode <- function (df, address_column, crs = 4326) {
       jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
 
 
-    message("njgeo: downloading data")
+    
     response <- httr::POST(url = "https://opengis.detroitmi.gov/opengis/rest/services/Geocoders/CompositeGeocoder/GeocodeServer/geocodeAddresses",
                            body = list(addresses = adr_json, f = "json", outSR = crs))
     response <- jsonlite::fromJSON(httr::content(response,
