@@ -2,7 +2,7 @@
 
 #
 #not set up to return geoms yet
-get_parcels_faster <- function(returnGeom=F, fields=c('object_id', 'parcel_number')) {
+get_parcels_faster <- function(fields=c('object_id', 'parcel_number'),returnGeom=F ) {
   library(httr)
   library(dplyr)
 
@@ -27,7 +27,7 @@ get_parcels_faster <- function(returnGeom=F, fields=c('object_id', 'parcel_numbe
   return <- list()
   j <- 0
   for(i in 1:round(ids$count/2000+1)) {
-    print(i, j)
+    print(c(i, j))
     query <- POST(url, encode="form",                      # this will set the header for you
                             #body=list(file=upload_file("example.txt")),   # this is how to upload files
                             body=list(
@@ -38,6 +38,13 @@ get_parcels_faster <- function(returnGeom=F, fields=c('object_id', 'parcel_numbe
                               outFields=fields_string,
                               f='pjson'
                               ))
+
+    #get geoms if requested
+    if(returnGeom=='true') {
+      geoms <- return_geoms_helper(query=query, out_fields = fields)
+      return[[i]] <- geoms
+
+    } else {
       response <- query %>%
         httr::content()%>%
         .$features %>%
@@ -47,8 +54,7 @@ get_parcels_faster <- function(returnGeom=F, fields=c('object_id', 'parcel_numbe
 
         response <- tidyr::unnest(as.data.frame(do.call(rbind, response)),cols=all_of(fields))
 
-      return[[i]] <- response
-
+      return[[i]] <- response }
 
       j <- j+2000
 

@@ -8,9 +8,9 @@ return_geoms_helper <- function(query, out_fields) {
   geometries <- list()
 
   #loop
-  for(i in 1:length(l)) {
+  for(i in 1:length(features_json)) {
     #for geometry in feature
-    x <- l[[i]]$geometry$rings
+    x <- features_json[[i]]$geometry$rings
 
     #for polygon in geometry
     for(j in 1:length(x)) {
@@ -43,12 +43,14 @@ return_geoms_helper <- function(query, out_fields) {
   #create df out of features
   df <- lapply(features_json, function(x) (as.vector(unlist(x$attributes))))
   #create df
-  df <- as.data.frame(unlist(df), col.names=out_fields)
+  df <- as.data.frame(do.call(rbind,df), col.names=out_fields)
+
+  colnames(df) <- out_fields
 
   #bind to geometries
-  polys <- cbind(t, geometries)
+  polys <- cbind(df, geometries)
   #convert to spatial object
-  df <- df %>% sf::st_as_sf(coords="geometry")
+  df <- polys %>% sf::st_as_sf(sf_column_name="geometry")
 
   return(df)
 }
