@@ -55,7 +55,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
 
     results <- do.call(rbind, results)
 
-    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id")]
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id",'attributes.ResultID')]
 
 
 
@@ -81,7 +81,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
       jsonlite::toJSON(list(records = tmp_list), auto_unbox = TRUE)
 
 
-    
+
     response <- httr::POST(url = "https://opengis.detroitmi.gov/opengis/rest/services/Geocoders/CompositeGeocoder/GeocodeServer/geocodeAddresses",
                            body = list(addresses = adr_json, f = "json", outSR = crs))
     response <- jsonlite::fromJSON(httr::content(response,
@@ -89,7 +89,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
     results <- response[["locations"]]
     results[is.na(results)] <- NA
 
-    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id")]
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id","attributes.ResultID")]
 
     return(results)
   }
