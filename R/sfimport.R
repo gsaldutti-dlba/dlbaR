@@ -29,7 +29,8 @@ sf_import_query <- function(query, object=NULL, api="Bulk 2.0") {
 
   id_cols_list_names <- lapply(colnames(df)[id_cols_list_idx], function(x) {
     x <- stringr::str_remove(x, "__r")
-    x <- stringr::str_replace(x, "\\.", "_")
+    x<- stringr::str_replace(x, "\\.", "_")
+    return(x)
   })
 
   #append object name to Id column
