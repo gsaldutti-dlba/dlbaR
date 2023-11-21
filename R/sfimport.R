@@ -25,7 +25,7 @@ sf_import_query <- function(query, object=NULL, api="Bulk 2.0") {
   df <- sf_query(query, object=object, api_type = api)
 
   #fix id column names
-  id_cols_list_idx <- grep('Id', colnames_df)
+  id_cols_list_idx <- grep('Id', colnames(df))
 
   id_cols_list_names <- lapply(colnames(id_cols_list_idx), function(x) {
     x <- stringr::str_remove(x, "__r")
