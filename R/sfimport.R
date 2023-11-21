@@ -32,9 +32,9 @@ sf_import_query <- function(query, object=NULL, api="Bulk 2.0") {
     x<- stringr::str_replace(x, "\\.", "_")
     return(x)
   })
-
+  colnames(df)[id_cols_list_idx] <- id_cols_list_names
   #append object name to Id column
-  colnames(df)[colnames(df)=='Id'] <- paste(object,
+  colnames(df)[colnames(df)=='Id'] <- paste(object, "_",
     stringr::str_remove(colnames(df)[colnames(df)=='Id'],"__c"))
 
   names(df) <- gsub(":","",names(df))
