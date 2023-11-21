@@ -34,8 +34,7 @@ sf_import_query <- function(query, object=NULL, api="Bulk 2.0") {
 
   #append object name to Id column
   colnames(df)[colnames(df)=='Id'] <- paste(object,
-    stringr::str_remove(colnames(df)[colnames(df)=='Id']
-                        "__c"))
+    stringr::str_remove(colnames(df)[colnames(df)=='Id'],"__c"))
 
   names(df) <- gsub(":","",names(df))
   names(df) <- gsub(" ", "", names(df))
