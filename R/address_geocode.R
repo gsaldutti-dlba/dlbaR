@@ -55,7 +55,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
 
     results <- do.call(rbind, results)
 
-    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id",'attributes.ResultID')]
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id",'attributes.ResultID', 'attributes.address_id')]
 
 
 
@@ -89,7 +89,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
     results <- response[["locations"]]
     results[is.na(results)] <- NA
 
-    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id","attributes.ResultID")]
+    results <- results[,c('attributes.ShortLabel',"attributes.parcel_id","attributes.ResultID", 'attributes.address_id')]
 
     return(results)
   }
