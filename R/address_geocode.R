@@ -10,7 +10,7 @@ address_geocode <- function (df, address_column, crs = 4326) {
   names(adr_df) <- c("OBJECTID", "SingleLine")
 
 
-  if (nrow(df>1000)) {
+  if (nrow(df)>1000) {
 
     df_list <- split(adr_df, ceiling(seq(nrow(adr_df))/1000))
 
